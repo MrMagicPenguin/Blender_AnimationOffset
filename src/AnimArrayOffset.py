@@ -55,6 +55,7 @@ def move_keyframes(delta_time, delta_value):
                 data_path = fcu.data_path  # Name of parameter
                 for keyframe in fcu.keyframe_points:
                     old_keyframe = keyframe.co
+                    # Manipulate the keyframe.co directly, instead of creating & deleting keyframes.
                     new_keyframe = (old_keyframe.x + delta_time, old_keyframe.y + delta_value)
 
 
