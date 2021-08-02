@@ -29,14 +29,15 @@ def move_nla_strip(tracks, delta):
             strip.frame_end += delta
 
 
-def modulate_anim_property(tracks, delta: int):
-    for track in tracks:
-        for strip in track.strips:
-            action = strip.action
+def modulate_anim_property(obj, delta):
+    for tracks in obj.animation_data.nla_tracks:
+        for track in tracks:
+            for strip in track.strips:
+                action = strip.action
 
-            for fc in action.fcurves:
-                for kf in fc.keyframe_points:
-                    kf.co.y += delta
+                for fc in action.fcurves:
+                    for kf in fc.keyframe_points:
+                        kf.co.y += delta
 
 
 def index_list(lst: list):
@@ -52,19 +53,27 @@ def index_list(lst: list):
     return _list
 
 
-def move_keyframes(delta_time, delta_value):
+def get_modifier_list(lst, modifier):
+    _mod_list = []
+    _mod_list[:] = [i * modifier for i in lst]
+    return _mod_list
+
+
+def move_keyframes():
     # * Animations are stored in Non Linear Actions (NLA) containers, so we assume that any animation will have one
     # * Stored long-term ("pushed down") as an NLA block or otherwise.
     # * Looking up by object rather than by action name is easier so assume any animations must be pushed down
 
     active_obj = bpy.context.active_object
+    objects = bpy.context.selected_objects
 
+    modifier_list = get_modifier_list(objects, 3)
     # TODO Make sure list isn't empty
     tracks = active_obj.animation_data.nla_tracks  # this is a dictionary
 
-    for obj in bpy.context.selected_objects:
+    for obj in objects:
         print(obj.name)
-        if obj == bpy.context.active_object:
+        if obj == active_obj:
             print("Active Object!")
             pass
         else:
@@ -83,8 +92,9 @@ def move_keyframes(delta_time, delta_value):
             pass
         else:
             print("Selected Object!")
-            move_nla_strip(tracks, delta_value)
-            modulate_anim_property(tracks, delta_value)
+            for i in bpy.context.selected_objects:
+                move_nla_strip(tracks, modifier_list[objects.index(obj)])
+                modulate_anim_property(tracks, modifier_list[objects.index(obj)])
 
 
 class ArrayAnimOffsetOperator(bpy.types.Operator):
