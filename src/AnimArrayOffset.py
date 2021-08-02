@@ -14,11 +14,42 @@ def add_array_modifier(count, offsetX, offsetY, offsetZ, offsetU, offsetV):
     mod.offset_u = offsetU
     mod.offset_v = offsetV
 
+
 # make sure an object *is* active before calling this
 def separate_objects():
     bpy.ops.object.modifier_apply(modifier='ARRAY')
     # Separate by loose ends
     bpy.ops.mesh.separate('LOOSE')
+
+
+def move_nla_strip(tracks, delta):
+    for track in tracks:
+        for strip in track.strips:
+            strip.frame_start += delta
+            strip.frame_end += delta
+
+
+def modulate_anim_property(tracks, delta: int):
+    for track in tracks:
+        for strip in track.strips:
+            action = strip.action
+
+            for fc in action.fcurves:
+                for kf in fc.keyframe_points:
+                    kf.co.y += delta
+
+
+def index_list(lst: list):
+    """
+    Returns a new list of the index values of the given list.
+
+    For example, a list of [1,1,1,1] as input would return [0,1,2,3]
+
+    :param lst: Input list
+    :return: Output new list of index tokens
+    """
+    _list = [i for i, e in enumerate(lst)]
+    return _list
 
 
 def move_keyframes(delta_time, delta_value):
@@ -30,8 +61,6 @@ def move_keyframes(delta_time, delta_value):
 
     # TODO Make sure list isn't empty
     tracks = active_obj.animation_data.nla_tracks  # this is a dictionary
-
-
 
     for obj in bpy.context.selected_objects:
         print(obj.name)
@@ -47,20 +76,15 @@ def move_keyframes(delta_time, delta_value):
     # Get all keyframes (X,Y) from a given NLA Action
     # * X Coord is Frame #
     # * Y Coord is Keyed Value
-    for track in tracks:
-        for strip in track.strips:
-            action = strip.action
-
-            for fcu in action.fcurves:
-                data_path = fcu.data_path  # Name of parameter
-                for keyframe in fcu.keyframe_points:
-                    old_keyframe = keyframe.co
-                    # Manipulate the keyframe.co directly, instead of creating & deleting keyframes.
-                    new_keyframe = (old_keyframe.x + delta_time, old_keyframe.y + delta_value)
-
-
-
-
+    for obj in bpy.context.selected_objects:
+        print(obj.name)
+        if obj == bpy.context.active_object:
+            print("Active Object!")
+            pass
+        else:
+            print("Selected Object!")
+            move_nla_strip(tracks, delta_value)
+            modulate_anim_property(tracks, delta_value)
 
 
 class ArrayAnimOffsetOperator(bpy.types.Operator):
