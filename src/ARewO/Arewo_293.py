@@ -1,7 +1,6 @@
 import random
 import bpy
-from bpy.props import StringProperty
-from mathutils import Vector
+import action_creator as ac
 
 # ##### BEGIN GPL LICENSE BLOCK #####
 #
@@ -21,9 +20,22 @@ from mathutils import Vector
 #
 # ##### END GPL LICENSE BLOCK #####
 
+bl_info = {
+    "name": "arewo",
+    "description": "Replicates Objects with their animation offset in time - Updated for 2.8x+",
+    "author": "Frederik Steinmetz, Noah Price",
+    "version": (1, 0),
+    "blender": (2, 80, 0),
+    "location": "Toolshelf",
+    "warning": "This is an Alpha version",  # used for warning icon and text in addons panel
+    "wiki_url": "",
+    "tracker_url": "http://www.blenderdiplom.com",
+    "category": "Animation"
+}
+
 
 # Arewo Simple
-def run_linear_offset(loops, offset_frames, random_range, offset_position, offset_rotation, create_parent):
+def run_linear_offset(loops, offset_frames, random_range, offset_position, offset_rotation, create_parent, offset_prop_val):
     obj = bpy.context.active_object
     if create_parent:  # if a parent needs to be created
         if obj.parent is None:
@@ -47,7 +59,7 @@ def run_linear_offset(loops, offset_frames, random_range, offset_position, offse
         name = obj.name + str(i)
         new_object = bpy.data.objects.new(name, base_mesh)
 
-        # * This may be a relic system for when Scenes/Layers were handled differently (<2.80)
+        # * More cleanup, use a new object creation method
         bpy.context.scene.objects.link(new_object)
         new_object.layers = obj.layers
 
@@ -65,25 +77,21 @@ def run_linear_offset(loops, offset_frames, random_range, offset_position, offse
             offset_time = offset_frames * (i + 1) + random_offset
 
         # Offset keyframes if Exist
-        # ? Shape Keys require additional work
-        if obj.animation_data is not None:
-            # ? Should be looped for multiple NLA strips?
-            new_action = obj.animation_data.action.copy()
-            fc = new_action.fcurves
-            print(i, ": random: ", random_offset, ", offset Time: ", offset_time)
-            for curve in fc:
-                kfps = curve.keyframe_points
-                for keyframe in kfps:
-                    keyframe.co[0] += offset_time
-                    keyframe.handle_left[0] += offset_time
-                    keyframe.handle_right[0] += offset_time
+            ac.create_offset_action(offset_frames, offset_prop_val)
+            # TODO: Assign duplicate animation to new object
+            # ? This is block may be outdated, find correct technique
+            # * assign object new action
+            # new_object.animation_data_create()
+            # new_object.animation_data.action = new_action
 
-            new_object.animation_data_create()
-            new_object.animation_data.action = new_action
+        if obj.shape_key.animation_data is not None:
+            ac.create_offset_shapekey_action(offset_frames)
+            # TODO: Assign duplicate action to new object
 
         if create_parent:  # if a parent object was created, the new object will be a child of it
             new_object.parent = par
     bpy.context.scene.update()  # probably unnecessary, just in case though
+
 
 # linear offset operator
 class arewo_simple(bpy.types.Operator):
@@ -105,6 +113,13 @@ class arewo_simple(bpy.types.Operator):
         min=0,
         max=10000,
         description="Offset for the animation in frames"
+    )
+    offset_prop_val = bpy.props.FloatProperty(
+        name="Offset Property Value",
+        default=0,
+        min=0,
+        max=10000,
+        description="Delta of the animated property per iteration"
     )
     random_offset = bpy.props.IntProperty(
         name="Random Offset",
@@ -145,6 +160,22 @@ class arewo_simple(bpy.types.Operator):
 class arewo_panel(bpy.types.Panel):
     """Animation Offset"""
     bl_idname = "arewo.replicate"
-    bl_label = "Arewo"
+    bl_label = "Animation Offset"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
+    bl_category = "ARewO"
+
+
+def register():
+    # ! register panel 1st
+    bpy.utils.register_class(arewo_simple)
+
+
+def unregister():
+    # ! register panel 1st
+    bpy.utils.unregister_class(arewo_simple)
+
+
+if __name__ == "__main__":
+    register()
+    print("ARewO successfully registered")
