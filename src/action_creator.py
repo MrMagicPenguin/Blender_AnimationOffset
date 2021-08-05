@@ -55,8 +55,11 @@ def create_offset_shapekey_action(offset_time: int):
                     fcurves = [fc for fc in new_action.fcurves]
                     for fc in fcurves:
                         kfps = fc.keyframe_points
-                        for kf in kfps:
-                            kf.co.x += offset_time
+                        for keyframe in kfps:
+                            keyframe.co.x += offset_time
+                            keyframe.handle_left[0] += offset_time
+                            keyframe.handle_right[0] += offset_time
+
                     return new_action
 
         else:

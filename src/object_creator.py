@@ -10,6 +10,11 @@ def duplicate_linear_offset(iterations, offset_position, offset_key):
     coll = bpy.data.collections.new(active_object.name + "Offset Array")
     bpy.context.scene.collection.children.link(coll)
 
+    # Move Active Object into new collection for the sake of cleanup
+    # ? investigate why Cube continues to exist in Scene Collection as well, may need to be unlinked.
+    bpy.data.collections[coll.name].objects.link(active_object)
+    bpy.context.view_layer.update()
+
     # * Store original mesh data
     base_mesh = active_object.data
     base_location = active_object.matrix_world.to_translation()
@@ -36,5 +41,18 @@ def duplicate_linear_offset(iterations, offset_position, offset_key):
         if new_object.animation_data:
             new_object.animation_data.clear()
 
+        # Generic animation
         new_object.animation_data_create()
         new_object.animation_data.action = ac.create_offset_action(offset_key * (i + 1), (0, 0, 0))
+
+        # Shapekey animation
+        new_object_shapekeys = new_object.data.shape_keys  # convenience variable
+
+        if new_object_shapekeys.animation_data is not None:
+            new_object.data.shape_keys.animation_data_clear()
+
+        new_object_shapekeys.animation_data_create()
+        new_object_shapekeys.animation_data.action = ac.create_offset_shapekey_action(offset_key * (i + 1))
+
+# test call
+# duplicate_linear_offset(1, (0, 3, 0), 10)
