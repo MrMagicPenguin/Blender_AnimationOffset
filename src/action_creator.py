@@ -1,9 +1,9 @@
 import bpy
 
-active_object = bpy.context.active_object
+active_object = bpy.context.active_object  # ! this should be passed through class context
 
 
-def create_offset_action(offset_time: int, offset_value: list) -> bpy.types.action:
+def create_offset_action(offset_time: int, offset_value: tuple):
     """
     Creates a duplicate action for each action on an active object.
 
