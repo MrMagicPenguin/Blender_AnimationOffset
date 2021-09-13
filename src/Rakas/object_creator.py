@@ -1,5 +1,5 @@
 import bpy
-import src.action_creator as ac
+import src.Rakas.action_creator as ac
 from mathutils import Vector
 
 active_object = bpy.context.active_object  # ! this should be passed through class context
@@ -10,8 +10,7 @@ def duplicate_linear_offset(iterations, offset_position, offset_key):
     coll = bpy.data.collections.new(active_object.name + "Offset Array")
     bpy.context.scene.collection.children.link(coll)
 
-    # Move Active Object into new collection for the sake of cleanup
-    # ? investigate why Cube continues to exist in Scene Collection as well, may need to be unlinked.
+    # TODO Unlink seed object from main collection for hierarchy cleanliness
     bpy.data.collections[coll.name].objects.link(active_object)
     bpy.context.view_layer.update()
 
@@ -40,19 +39,13 @@ def duplicate_linear_offset(iterations, offset_position, offset_key):
         # remove old action
         if new_object.animation_data:
             new_object.animation_data.clear()
-
-        # Generic animation
-        new_object.animation_data_create()
-        new_object.animation_data.action = ac.create_offset_action(offset_key * (i + 1), (0, 0, 0))
+            new_object.animation_data_create()
+            new_object.animation_data.action = ac.create_offset_action(offset_key * (i + 1), (0, 0, 0))
 
         # Shapekey animation
         new_object_shapekeys = new_object.data.shape_keys  # convenience variable
 
-        if new_object_shapekeys.animation_data is not None:
+        if new_object_shapekeys is not None:
             new_object.data.shape_keys.animation_data_clear()
-
-        new_object_shapekeys.animation_data_create()
-        new_object_shapekeys.animation_data.action = ac.create_offset_shapekey_action(offset_key * (i + 1))
-
-# test call
-# duplicate_linear_offset(1, (0, 3, 0), 10)
+            new_object_shapekeys.animation_data_create()
+            new_object_shapekeys.animation_data.action = ac.create_offset_shapekey_action(offset_key * (i + 1))
