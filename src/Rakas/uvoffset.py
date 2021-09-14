@@ -6,27 +6,26 @@ from mathutils import Vector
 from math import pi, sin, cos, atan2, hypot
 
 
-def extract_vertex_uv_coords(uvMap, uv_index):
-    coord_list = []
-    for loop in obj.data.loops:
-        uv_loop = uvMap.data[loop.index]
-        uv_coords = uv_loop.uv
-        coord_list.append(uv_coords)
-    return coord_list
-
-
 def to_cartesian(polar_coord):
-    length, angle = polar_coord[0], polar_coord[1]
-    return length * cos(angle), length * sin(angle)
+    length, angle = polar_coord.x, polar_coord.y
+    return Vector((length * cos(angle), length * sin(angle)))
+
+
+def to_cartesian_pivot(polar_coord, angle, pivot):
+    # ? does this change from polar to cartesian? does this formula assume cartesian coords?
+    x_rotated = ((polar_coord.x - pivot.x) * cos(angle)) - ((polar_coord.y - pivot.y) * sin(angle)) + pivot.x
+    y_rotated = ((polar_coord.x - pivot.x) * sin(angle)) - ((polar_coord.y - pivot.y) * cos(angle))n + pivot.y
+    return Vector((x_rotated, y_rotated))
 
 
 def to_polar(vector):
     x, y = vector[0], vector[1]
     angle = atan2(y, x)
-    return hypot(vector), angle
+    return Vector((hypot(x, y), angle))
 
 
 # Get object and UV map given their names
+# !rm
 def GetObjectAndUVMap(objName, uvMapName):
     try:
         obj = bpy.context.active_object
@@ -35,7 +34,7 @@ def GetObjectAndUVMap(objName, uvMapName):
             uvMap = obj.data.uv_layers[uvMapName]
             return obj, uvMap
     except:
-        print("Error")
+        print("No Mesh Selected!")
 
     return None, None
 
@@ -48,16 +47,19 @@ def Scale2D(v, s, p):
             p[1] + s[1] * (v[1] - p[1]))
 
 
-def Rotate2D(v, r):
+def Rotate2D(v, r, p):
     # get distance of vector
     # convert v, p to polar coords
     # add/subtract r from v
     # convert to cartesian
     # return Vector2 coords
-    v_polar = [to_polar(v) for v in v]
-    v_rotated_polar = [(l, angle + r) for l, angle in v_polar]
-    v_rotated = [to_cartesian(p) for p in v_rotated_polar]
-    return v_rotated
+    # * thanks to Mark Booth
+    # https://stackoverflow.com/questions/620745/c-rotating-a-vector-around-a-certain-point
+
+    v_polar = to_polar(v)
+    v_rotated_polar = Vector((v_polar.x, v_polar.y + r))
+    v_prime = to_cartesian_pivot(v_rotated_polar, r, p)
+    return v_prime
 
 
 def Translate2D(v, t):
@@ -71,10 +73,9 @@ def ScaleUV(uvMap, scale, pivot):
         uvMap.data[uvIndex].uv = Scale2D(uvMap.data[uvIndex].uv, scale, pivot)
 
 
-def RotateUV(uvMap, rotation):
+def RotateUV(uvMap, rotation, pivot):
     for uvIndex in range(len(uvMap.data)):
-        vertices = extract_vertex_uv_coords(uvMap, uvIndex)
-        uvMap.data[uvIndex].uv = Rotate2D(vertices, rotation)
+        uvMap.data[uvIndex].uv = Rotate2D(uvMap.data[uvIndex].uv, rotation, pivot)
 
 
 def TranslateUV(uvMap, translate):
@@ -90,10 +91,10 @@ objName = 'Cube'
 uvMapName = 'UVMap'
 
 # Defines the pivot and scale
-pivot = Vector((0.5, 0.5))
+wpivot = Vector((0.5, 0.5))
 scale = Vector((2, 2))
-rotation = pi/4
-# * UV coords are in a 0-1 space; adding whole numbers to a vector will not change the pattern significantly.
+rotation = pi / 4
+# * Mind that UV coords are in a 0-1 space; adding whole numbers to a vector will not change the pattern significantly.
 translate = Vector((1, 0))
 
 # Get the object from names
@@ -101,5 +102,4 @@ obj, uvMap = GetObjectAndUVMap(objName, uvMapName)
 
 # If the object is found, scale its UV map
 if obj is not None:
-    print(extract_vertex_uv_coords(uvMap, 0))
-
+    RotateUV(uvMap, rotation, wpivot)
