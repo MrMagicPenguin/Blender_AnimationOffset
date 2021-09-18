@@ -4,24 +4,12 @@
 import bpy
 from mathutils import Vector, Matrix
 import numpy as np
-from math import pi, sin, cos, atan2, hypot
 
-
-def to_cartesian(polar_coord):
-    length, angle = polar_coord.x, polar_coord.y
-    return Vector((length * cos(angle), length * sin(angle)))
-
-
-def to_polar(vector):
-    x, y = vector[0], vector[1]
-    angle = atan2(y, x)
-    return Vector((hypot(x, y), angle))
 
 
 # Get object and UV map given their names
-# !rm
+# ? Probably can refactor this into something more useful
 def GetObjectAndUVMap(obj, uvMapName):
-
     if obj is not None:
         if obj.type == 'MESH':
             uvMap = obj.data.uv_layers[uvMapName]
@@ -78,6 +66,7 @@ def RotateUV(obj, angle, pivot):
     obj.data.uv_layers.active.data.foreach_set("uv", uvs.ravel())
     obj.data.update()
 
+
 def TranslateUV(uvMap, translate):
     for uvIndex in range(len(uvMap.data)):
         uvMap.data[uvIndex].uv = Translate2D(uvMap.data[uvIndex].uv, translate)
@@ -87,12 +76,13 @@ def TranslateUV(uvMap, translate):
 bpy.ops.object.mode_set(mode='OBJECT')
 
 # The names of the object and map
+# TODO Replace with active_uv, or remove entirely
 uvMapName = 'UVMap'
 
 # Defines the pivot and scale
 wpivot = Vector((0.5, 0.5))
 scale = Vector((2, 2))
-rotation = pi / 4  # use numpy.radians(degrees) instead
+rotation = np.radians(90)  # use numpy.radians(degrees) instead
 # * Mind that UV coords are in a 0-1 space; adding whole numbers to a vector will not change the pattern significantly.
 translate = Vector((1, 0))
 
