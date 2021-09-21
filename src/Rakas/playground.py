@@ -187,9 +187,16 @@ class RakasProperties(PropertyGroup):
 
     offset_position: FloatVectorProperty(
         name="Position Offset",
-        description="How much to offset duplicated objects?",
+        description="How much to offset duplicated object's position?",
         subtype='TRANSLATION',
         default=[1.0, 0.0, 0.0]
+    )
+
+    offset_rotation: FloatVectorProperty(
+        name="Rotation Offset",
+        description="How much to offset duplicated object's position?",
+        subtype='ROTATION',
+        default=[0.0, 0.0, 0.0]
     )
 
     collection_name: StringProperty(
@@ -223,7 +230,7 @@ class OBJECT_PT_Rakas_Main(Panel):
     bl_label = "Rakas"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Tool"
+    bl_category = "Rakas"
 
     @classmethod
     def poll(self, context):
