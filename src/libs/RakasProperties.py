@@ -4,6 +4,7 @@ from bpy.props import (BoolProperty,
                        FloatVectorProperty,
                        StringProperty,
                        PointerProperty,
+                       EnumProperty
                        )
 from bpy_types import (PropertyGroup)
 
@@ -13,6 +14,8 @@ class RakasProperties(PropertyGroup):
         description="Object to duplicate",
         type=bpy.types.Object
     )
+
+    seed_object_uv: EnumProperty()
 
     iterations: IntProperty(
         name="Iterations",

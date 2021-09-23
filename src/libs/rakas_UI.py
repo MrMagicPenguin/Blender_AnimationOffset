@@ -23,5 +23,6 @@ class OBJECT_PT_Rakas_Panel(Panel):
         layout.prop(settings, "offset_time")
         layout.prop(settings, "offset_position")
         layout.prop(settings, "collection_name", text="")
+        layout.prop(settings, "seed_object_uv")
 
         layout.operator("object.rakas_linear_offset")
